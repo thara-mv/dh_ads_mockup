@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodora Ads Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --foodora-pink: #D81B60;
+            --foodora-dark: #C2185B;
+            --success: #10B981;
+            --text-dark: #1F2937;
+            --text-med: #6B7280;
+            --bg: #F9FAFB;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); }
+        .container { max-width: 480px; margin: 0 auto; padding: 20px; }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .header { background: linear-gradient(135deg, var(--foodora-pink), var(--foodora-dark)); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 700; }
+        .logo-icon { width: 40px; height: 40px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
+        .lang-sel { position: relative; }
+        .lang-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .lang-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 100; }
+        .lang-dropdown.show { display: block; }
+        .lang-opt { padding: 12px 16px; cursor: pointer; display: flex; gap: 10px; color: var(--text-dark); }
+        .lang-opt:hover { background: #FFF5F8; }
+        .lang-opt.active { background: #FFF5F8; color: var(--foodora-pink); font-weight: 600; }
+        
+        .card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: none; margin-top: 20px; }
+        .btn-primary { background: var(--foodora-pink); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--foodora-dark); transform: translateY(-2px); }
+        .btn-primary:disabled { background: #E5E7EB; color: #9CA3AF; cursor: not-allowed; }
+        .btn-back { background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+        
+        .q-card { background: var(--bg); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .q-card h3 { font-size: 16px; margin-bottom: 14px; }
+        .opt-btn { display: block; width: 100%; padding: 12px 16px; margin-bottom: 8px; background: white; border: 2px solid #E5E7EB; border-radius: 10px; cursor: pointer; text-align: left; font-size: 14px; transition: all 0.3s; }
+        .opt-btn:hover { border-color: var(--foodora-pink); background: #FFF5F8; }
+        .opt-btn.selected { border-color: var(--foodora-pink); background: #FFF5F8; font-weight: 600; }
+        
+        .outlet-card { background: white; border: 2px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; display: flex; gap: 12px; transition: all 0.3s; }
+        .outlet-card:hover { border-color: var(--foodora-pink); }
+        .outlet-card.selected { border-color: var(--foodora-pink); background: #FFF5F8; }
+        .checkbox { width: 24px; height: 24px; border: 2px solid #E5E7EB; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .outlet-card.selected .checkbox { background: var(--foodora-pink); border-color: var(--foodora-pink); color: white; }
+        .outlet-info h4 { font-size: 15px; margin-bottom: 4px; }
+        .outlet-info p { font-size: 13px; color: var(--text-med); }
+        
+        .camp-card { background: white; border: 2px solid #E5E7EB; border-radius: 12px; padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s; }
+        .camp-card:hover { border-color: var(--foodora-pink); }
+        .camp-card.selected { border-color: var(--foodora-pink); background: #FFF5F8; }
+        .camp-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge.pop { background: #FEF3C7; color: #92400E; }
+        .badge.rec { background: #F8BBD0; color: var(--foodora-dark); }
+        
+        .budget-display { text-align: center; font-size: 40px; font-weight: 700; color: var(--foodora-pink); margin: 20px 0; }
+        .slider { width: 100%; height: 8px; background: #E5E7EB; border-radius: 4px; outline: none; -webkit-appearance: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; background: var(--foodora-pink); border-radius: 50%; cursor: pointer; }
+        .estimate-box { background: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 16px; margin: 16px 0; }
+        .estimate-box h4 { color: #1E40AF; font-size: 13px; margin-bottom: 8px; }
+        
+        /* Creative Assets */
+        .ad-preview { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .ad-image { width: 100%; height: 180px; background: linear-gradient(135deg, var(--foodora-pink), var(--foodora-dark)); display: flex; align-items: center; justify-content: center; font-size: 70px; position: relative; }
+        .ad-badge-overlay { position: absolute; top: 12px; left: 12px; background: var(--foodora-pink); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+        .ad-content { padding: 16px; }
+        .ad-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .ad-desc { font-size: 14px; color: var(--text-med); margin-bottom: 12px; line-height: 1.4; }
+        .ad-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-med); }
+        
+        .badge-option { display: inline-block; padding: 10px 16px; margin: 6px 6px 6px 0; background: white; border: 2px solid #E5E7EB; border-radius: 10px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .badge-option:hover { border-color: var(--foodora-pink); }
+        .badge-option.selected { border-color: var(--foodora-pink); background: #FFF5F8; font-weight: 600; }
+        
+        .dish-card { background: white; border: 2px solid #E5E7EB; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
+        .dish-card:hover { border-color: var(--foodora-pink); }
+        .dish-card.selected { border-color: var(--foodora-pink); background: #FFF5F8; }
+        .dish-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .dish-info p { font-size: 12px; color: var(--text-med); }
+        
+        .offer-creator { background: #FFF7ED; border: 2px solid #F59E0B; border-radius: 12px; padding: 16px; margin: 16px 0; }
+        .offer-creator h4 { color: #92400E; font-size: 15px; margin-bottom: 12px; }
+        .offer-input { width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 15px; margin-bottom: 10px; }
+        .offer-calc { font-size: 13px; color: #92400E; margin-top: 10px; }
+        
+        /* Targeting */
+        .targeting-mode { background: white; border: 2px solid #E5E7EB; border-radius: 12px; padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s; }
+        .targeting-mode:hover { border-color: var(--foodora-pink); }
+        .targeting-mode.selected { border-color: var(--foodora-pink); background: #FFF5F8; }
+        .targeting-mode h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+        .targeting-mode p { font-size: 13px; color: var(--text-med); }
+        
+        .map-preview { width: 100%; height: 160px; background: linear-gradient(135deg, #10B981 20%, #34D399 80%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 60px; margin: 16px 0; position: relative; }
+        .map-overlay { position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(255,255,255,0.95); padding: 10px; border-radius: 8px; font-size: 12px; color: var(--text-dark); font-weight: 600; }
+        
+        .time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0; }
+        .time-slot { padding: 10px; background: white; border: 2px solid #E5E7EB; border-radius: 8px; text-align: center; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+        .time-slot:hover { border-color: var(--foodora-pink); }
+        .time-slot.selected { border-color: var(--foodora-pink); background: #FFF5F8; font-weight: 600; }
+        
+        .segment-checkbox { display: flex; align-items: center; gap: 12px; padding: 14px; background: white; border: 2px solid #E5E7EB; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; }
+        .segment-checkbox:hover { border-color: var(--foodora-pink); }
+        .segment-checkbox.selected { border-color: var(--foodora-pink); background: #FFF5F8; }
+        
+        /* Review */
+        .review-section { margin-bottom: 24px; }
+        .review-section h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .review-item { background: var(--bg); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .review-item strong { color: var(--text-dark); }
+        .review-item p { font-size: 14px; color: var(--text-med); margin-top: 4px; }
+        
+        .success-animation { text-align: center; padding: 40px 20px; }
+        .success-icon { width: 100px; height: 100px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--success), #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; animation: scaleIn 0.5s; }
+        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+        
+        .metric { background: white; border-radius: 12px; padding: 18px; margin-bottom: 12px; border: 1px solid #E5E7EB; }
+        .metric-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px; }
+        .metric-icon.pink { background: linear-gradient(135deg, #FFE5EF, #F8BBD0); }
+        .metric-icon.green { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+        .metric-label { font-size: 11px; color: var(--text-med); text-transform: uppercase; margin-bottom: 6px; }
+        .metric-value { font-size: 28px; font-weight: 700; }
+        .metric-change { font-size: 13px; color: var(--success); font-weight: 600; margin-top: 4px; }
+        
+        .uplift-card { background: linear-gradient(135deg, #10B981, #059669); border-radius: 16px; padding: 24px; color: white; margin-bottom: 16px; }
+        .uplift-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+        .uplift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .uplift-col { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 14px; }
+        .uplift-label { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
+        .uplift-value { font-size: 24px; font-weight: 700; }
+        .uplift-big { font-size: 36px; font-weight: 700; margin-top: 12px; }
+        
+        .roas-card { background: linear-gradient(135deg, var(--foodora-pink), var(--foodora-dark)); border-radius: 16px; padding: 24px; color: white; margin-bottom: 16px; }
+        .roas-value { font-size: 48px; font-weight: 700; margin-bottom: 10px; }
+        .roas-desc { font-size: 14px; opacity: 0.9; }
+        
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        h2 { font-size: 22px; margin-bottom: 12px; }
+        p { font-size: 15px; color: var(--text-med); line-height: 1.5; }
+        
+        .info-tip { background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 13px; color: #1E40AF; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome" class="screen active">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <div class="lang-sel">
+                    <button class="lang-btn" onclick="toggleLang(event)">
+                        <span id="flag">🇸🇪</span><span id="lang">Svenska</span><span>▼</span>
+                    </button>
+                    <div class="lang-dropdown" id="langDrop">
+                        <div class="lang-opt active" onclick="setLang('sv')"><span>🇸🇪</span><span>Svenska</span></div>
+                        <div class="lang-opt" onclick="setLang('en')"><span style="font-weight:700">EN</span><span>English</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="text-align:center; margin-bottom:32px">
+                    <div style="width:80px; height:80px; margin:0 auto 16px; background:linear-gradient(135deg,var(--foodora-pink),var(--foodora-dark)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px">🎯</div>
+                    <h1 class="t" data-key="welcome_title">Välkommen till Foodora Ads!</h1>
+                    <p class="t" data-key="welcome_sub">Skapa din första kampanj på under 5 minuter.</p>
+                </div>
+                <div class="q-card">
+                    <h3 class="t" data-key="q_goal">Vad är ditt mål?</h3>
+                    <button class="opt-btn" onclick="selectOpt('goal','orders')"><span class="t" data-key="goal_orders">📈 Få fler beställningar</span></button>
+                    <button class="opt-btn" onclick="selectOpt('goal','customers')"><span class="t" data-key="goal_cust">👥 Attrahera nya kunder</span></button>
+                    <button class="opt-btn" onclick="selectOpt('goal','dish')"><span class="t" data-key="goal_dish">🍕 Marknadsför en rätt</span></button>
+                </div>
+                <div class="q-card">
+                    <h3 class="t" data-key="q_exp">Din erfarenhet?</h3>
+                    <button class="opt-btn" onclick="selectOpt('exp','never')"><span class="t" data-key="exp_never">🌱 Aldrig gjort förut</span></button>
+                    <button class="opt-btn" onclick="selectOpt('exp','some')"><span class="t" data-key="exp_some">📚 Viss erfarenhet</span></button>
+                    <button class="opt-btn" onclick="selectOpt('exp','familiar')"><span class="t" data-key="exp_fam">🎓 Mycket bekant</span></button>
+                </div>
+                <button class="btn btn-primary" id="welcomeBtn" disabled onclick="showScreen('outlets')"><span class="t" data-key="continue">Fortsätt →</span></button>
+            </div>
+        </div>
+
+        <!-- Outlets Screen -->
+        <div id="outlets" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('welcome')">←</button>
+            </div>
+            <div class="card">
+                <div style="text-align:center; margin-bottom:24px">
+                    <div style="width:70px; height:70px; margin:0 auto 16px; background:linear-gradient(135deg,var(--foodora-pink),var(--foodora-dark)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px">📍</div>
+                    <h2 class="t" data-key="outlet_title">Välj dina restauranger</h2>
+                    <p class="t" data-key="outlet_sub">Välj en eller flera restauranger.</p>
+                </div>
+                <div class="outlet-card" onclick="toggleOutlet(this, 'centrum')">
+                    <div class="checkbox"></div>
+                    <div class="outlet-info">
+                        <h4>Mama's Pizza - Centrum</h4>
+                        <p>📍 Drottninggatan 45, Stockholm</p>
+                    </div>
+                </div>
+                <div class="outlet-card" onclick="toggleOutlet(this, 'soder')">
+                    <div class="checkbox"></div>
+                    <div class="outlet-info">
+                        <h4>Mama's Pizza - Södermalm</h4>
+                        <p>📍 Götgatan 78, Stockholm</p>
+                    </div>
+                </div>
+                <div class="outlet-card" onclick="toggleOutlet(this, 'vasa')">
+                    <div class="checkbox"></div>
+                    <div class="outlet-info">
+                        <h4>Mama's Pizza - Vasastan</h4>
+                        <p>📍 Odengatan 32, Stockholm</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="outletBtn" disabled onclick="showScreen('campaign')"><span class="t" data-key="continue">Fortsätt →</span></button>
+            </div>
+        </div>
+
+        <!-- Campaign Screen -->
+        <div id="campaign" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('outlets')">←</button>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="camp_title">Välj kampanjtyp</h2>
+                <p style="margin-bottom:20px" class="t" data-key="camp_sub">Välj den typ som matchar ditt mål.</p>
+                <div class="camp-card" onclick="selectCampaign(this, 'weekend')">
+                    <div class="camp-header">
+                        <h3><span class="t" data-key="camp_weekend">🎉 Helgrush</span></h3>
+                        <span class="badge pop t" data-key="popular">POPULÄR</span>
+                    </div>
+                    <p class="t" data-key="camp_weekend_desc">Öka synlighet under helgerna.</p>
+                    <div style="font-size:12px; color:var(--text-med)">💰 750-2000 kr</div>
+                </div>
+                <div class="camp-card" onclick="selectCampaign(this, 'newcust')">
+                    <div class="camp-header">
+                        <h3><span class="t" data-key="camp_new">👥 Nya kunder</span></h3>
+                        <span class="badge rec t" data-key="recommended">REKOMMENDERAD</span>
+                    </div>
+                    <p class="t" data-key="camp_new_desc">Rikta in på förstagångsbeställare.</p>
+                    <div style="font-size:12px; color:var(--text-med)">💰 1000-3000 kr</div>
+                </div>
+                <div class="camp-card" onclick="selectCampaign(this, 'always')">
+                    <div class="camp-header">
+                        <h3><span class="t" data-key="camp_always">📍 Alltid på</span></h3>
+                    </div>
+                    <p class="t" data-key="camp_always_desc">Stadig synlighet varje dag.</p>
+                    <div style="font-size:12px; color:var(--text-med)">💰 30-50 kr/dag</div>
+                </div>
+                <button class="btn btn-primary" id="campBtn" disabled onclick="showScreen('budget')"><span class="t" data-key="next_budget">Nästa: Budget →</span></button>
+            </div>
+        </div>
+
+        <!-- Budget Screen -->
+        <div id="budget" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('campaign')">←</button>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="budget_title">Hur mycket vill du spendera?</h2>
+                <p style="margin-bottom:20px" class="t" data-key="budget_sub">Flytta reglaget för att ställa in din budget.</p>
+                <div class="budget-display" id="budgetDisp">1500 kr</div>
+                <input type="range" class="slider" min="500" max="5000" value="1500" step="100" oninput="updateBudget(this.value)">
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-med); margin-top:8px">
+                    <span>500 kr</span><span>5000 kr</span>
+                </div>
+                <div class="estimate-box">
+                    <h4 class="t" data-key="expected">📈 FÖRVÄNTADE RESULTAT</h4>
+                    <p id="estOrders">23-38 ytterligare beställningar</p>
+                    <p style="font-size:13px; margin-top:6px" id="estRev">ROI: 570-1330 kr extra intäkter</p>
+                </div>
+                <div style="background:#FFF5F8; border-left:4px solid var(--foodora-pink); padding:14px; border-radius:8px; margin:16px 0">
+                    <p style="font-size:14px; color:var(--text-dark)"><strong>💳 Total budget:</strong> <span id="totalBudget">1500 kr</span> (<span id="outletCount">1</span> restaurang)</p>
+                </div>
+                <div style="background:var(--bg); border-radius:10px; padding:16px; margin:16px 0">
+                    <div style="display:flex; gap:10px; margin-bottom:8px"><span>✅</span><p style="font-size:13px; margin:0" class="t" data-key="never_exceed">Vi överskrider aldrig din budget</p></div>
+                    <div style="display:flex; gap:10px; margin-bottom:8px"><span>⏸️</span><p style="font-size:13px; margin:0" class="t" data-key="pause">Pausa när som helst, inga påföljder</p></div>
+                    <div style="display:flex; gap:10px"><span>💰</span><p style="font-size:13px; margin:0" class="t" data-key="guarantee">7-dagars pengarna-tillbaka-garanti</p></div>
+                </div>
+                <button class="btn btn-primary" onclick="showScreen('creative')"><span class="t" data-key="next_creative">Nästa: Skapa annons →</span></button>
+            </div>
+        </div>
+
+        <!-- Creative Assets Screen -->
+        <div id="creative" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('budget')">←</button>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="creative_title">Skapa din annons</h2>
+                <p style="margin-bottom:20px" class="t" data-key="creative_sub">Vi har automatiskt skapat en annons baserat på din meny.</p>
+                
+                <div class="info-tip">
+                    <strong>✨ <span class="t" data-key="auto_gen">Automatiskt genererad!</span></strong><br>
+                    <span class="t" data-key="auto_gen_desc">Vi valde din mest populära rätt och bästa foto</span>
+                </div>
+                
+                <div class="ad-preview">
+                    <div class="ad-image">
+                        🍕
+                        <div class="ad-badge-overlay" id="badgePreview">💰 15% rabatt</div>
+                    </div>
+                    <div class="ad-content">
+                        <div class="ad-title">Mama's Pizza</div>
+                        <div class="ad-desc" id="adDesc">Prova vår 4.8★ Margherita Pizza - Färska ingredienser, vedeldad perfektion</div>
+                        <div class="ad-meta">
+                            <span>⭐ 4.8 (320)</span>
+                            <span>🚴 25-35 min</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="font-size:16px; margin:20px 0 12px" class="t" data-key="add_badge">Lägg till märke (valfritt)</h3>
+                <div style="margin-bottom:20px">
+                    <button class="badge-option" onclick="selectBadge(this, '🆕 Nyhet!')" data-key-en="🆕 New!">🆕 <span class="t" data-key="badge_new">Nyhet!</span></button>
+                    <button class="badge-option selected" onclick="selectBadge(this, '💰 15% rabatt')" data-key-en="💰 15% off">💰 <span class="t" data-key="badge_discount">15% rabatt</span></button>
+                    <button class="badge-option" onclick="selectBadge(this, '⭐ Kockens val')" data-key-en="⭐ Chef\'s Choice">⭐ <span class="t" data-key="badge_chef">Kockens val</span></button>
+                    <button class="badge-option" onclick="selectBadge(this, '🔥 Populär')" data-key-en="🔥 Popular">🔥 <span class="t" data-key="badge_hot">Populär</span></button>
+                </div>
+                
+                <h3 style="font-size:16px; margin:20px 0 12px" class="t" data-key="choose_dish">Välj rätt att marknadsföra</h3>
+                <div class="dish-card selected" onclick="selectDish(this, 'Margherita Pizza')">
+                    <div class="dish-info">
+                        <h4>🍕 Margherita Pizza</h4>
+                        <p>⭐ 4.8 • <span class="t" data-key="most_ordered">Din mest beställda</span></p>
+                    </div>
+                    <span style="font-size:20px">✓</span>
+                </div>
+                <div class="dish-card" onclick="selectDish(this, 'Pepperoni Pizza')">
+                    <div class="dish-info">
+                        <h4>🍕 Pepperoni Pizza</h4>
+                        <p>⭐ 4.7 • <span class="t" data-key="high_margin">Hög marginal</span></p>
+                    </div>
+                </div>
+                
+                <div class="offer-creator">
+                    <h4>💰 <span class="t" data-key="offer_title">Skapa erbjudande (valfritt)</span></h4>
+                    <input type="number" class="offer-input" placeholder="15" oninput="calcOffer(this.value)" value="15">
+                    <label style="font-size:13px; color:#92400E">% <span class="t" data-key="discount">rabatt</span></label>
+                    <div class="offer-calc">
+                        <span class="t" data-key="offer_calc">💡 Ett 15% erbjudande kostar dig ~60 kr men ökar typiskt orderv ärdet med 180 kr</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="showScreen('targeting')"><span class="t" data-key="next_target">Nästa: Målgrupp →</span></button>
+            </div>
+        </div>
+
+        <!-- Targeting Screen -->
+        <div id="targeting" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('creative')">←</button>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="target_title">Välj din målgrupp</h2>
+                <p style="margin-bottom:20px" class="t" data-key="target_sub">Hur vill du nå dina kunder?</p>
+                
+                <div class="targeting-mode selected" onclick="selectTargeting(this, 'auto')">
+                    <h4>🎯 <span class="t" data-key="auto_target">Automatisk (Rekommenderad)</span></h4>
+                    <p class="t" data-key="auto_target_desc">Låt oss hitta dina kunder - AI optimerar baserat på liknande restauranger</p>
+                </div>
+                
+                <div id="autoPreview" style="display:block">
+                    <div class="map-preview">
+                        🗺️
+                        <div class="map-overlay">
+                            📍 <span class="t" data-key="coverage">Täckning: 2.5 km radie • ~45,000 potentiella kunder</span>
+                        </div>
+                    </div>
+                    <div class="info-tip">
+                        <strong>💡 <span class="t" data-key="smart_tip">Smart målinriktning aktiverad</span></strong><br>
+                        <span class="t" data-key="smart_desc">Vi visar dina annonser för kunder som tidigare beställt italiensk mat</span>
+                    </div>
+                </div>
+                
+                <div class="targeting-mode" onclick="selectTargeting(this, 'manual')">
+                    <h4>⚙️ <span class="t" data-key="manual_target">Manuell</span></h4>
+                    <p class="t" data-key="manual_target_desc">Anpassa exakt när och vem du vill nå</p>
+                </div>
+                
+                <div id="manualSettings" style="display:none">
+                    <h3 style="font-size:16px; margin:20px 0 12px" class="t" data-key="time_slots">Välj tidsperioder</h3>
+                    <div class="time-slots">
+                        <div class="time-slot" onclick="toggleTime(this)"><span class="t" data-key="lunch">Lunch</span><br>11-14</div>
+                        <div class="time-slot" onclick="toggleTime(this)"><span class="t" data-key="afternoon">Eftermiddag</span><br>14-17</div>
+                        <div class="time-slot selected" onclick="toggleTime(this)"><span class="t" data-key="dinner">Middag</span><br>17-21</div>
+                        <div class="time-slot selected" onclick="toggleTime(this)"><span class="t" data-key="evening">Kväll</span><br>21-23</div>
+                        <div class="time-slot" onclick="toggleTime(this)"><span class="t" data-key="night">Natt</span><br>23-02</div>
+                        <div class="time-slot" onclick="toggleTime(this)"><span class="t" data-key="late_night">Sen natt</span><br>02-06</div>
+                    </div>
+                    
+                    <h3 style="font-size:16px; margin:20px 0 12px" class="t" data-key="segments">Kundsegment</h3>
+                    <div class="segment-checkbox selected" onclick="toggleSegment(this)">
+                        <div class="checkbox">✓</div>
+                        <div>
+                            <strong class="t" data-key="seg_new">Nya kunder</strong>
+                            <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="seg_new_desc">Personer som aldrig beställt från dig</p>
+                        </div>
+                    </div>
+                    <div class="segment-checkbox" onclick="toggleSegment(this)">
+                        <div class="checkbox"></div>
+                        <div>
+                            <strong class="t" data-key="seg_lapsed">Vilande kunder</strong>
+                            <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="seg_lapsed_desc">Inte beställt på 30+ dagar</p>
+                        </div>
+                    </div>
+                    <div class="segment-checkbox" onclick="toggleSegment(this)">
+                        <div class="checkbox"></div>
+                        <div>
+                            <strong class="t" data-key="seg_regulars">Stamkunder</strong>
+                            <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="seg_regulars_desc">Beställer regelbundet från dig</p>
+                        </div>
+                    </div>
+                    <div class="segment-checkbox selected" onclick="toggleSegment(this)">
+                        <div class="checkbox">✓</div>
+                        <div>
+                            <strong class="t" data-key="seg_cuisine">Kök-utforskare</strong>
+                            <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="seg_cuisine_desc">Personer som beställer italiensk mat</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="showScreen('review')"><span class="t" data-key="review_launch">Granska & Lansera →</span></button>
+            </div>
+        </div>
+
+        <!-- Review & Launch Screen -->
+        <div id="review" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+                <button class="btn-back" onclick="showScreen('targeting')">←</button>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="review_title">Granska din kampanj</h2>
+                <p style="margin-bottom:24px" class="t" data-key="review_sub">Allt ser bra ut? Lansera din kampanj!</p>
+                
+                <div class="review-section">
+                    <h3 class="t" data-key="preview">📱 Förhandsvisning</h3>
+                    <div class="ad-preview">
+                        <div class="ad-image">
+                            🍕
+                            <div class="ad-badge-overlay" id="finalBadge">💰 15% rabatt</div>
+                        </div>
+                        <div class="ad-content">
+                            <div class="ad-title">Mama's Pizza</div>
+                            <div class="ad-desc">Prova vår 4.8★ Margherita Pizza - Färska ingredienser, vedeldad perfektion</div>
+                            <div class="ad-meta">
+                                <span>⭐ 4.8 (320)</span>
+                                <span>🚴 25-35 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="review-section">
+                    <h3 class="t" data-key="budget_break">💰 Budgetuppdelning</h3>
+                    <div class="review-item">
+                        <strong class="t" data-key="daily_budget">Daglig budget:</strong>
+                        <p id="reviewDailyBudget">50 kr/dag per restaurang</p>
+                    </div>
+                    <div class="review-item">
+                        <strong class="t" data-key="campaign_duration">Kampanjlängd:</strong>
+                        <p id="reviewDuration">30 dagar</p>
+                    </div>
+                    <div class="review-item">
+                        <strong class="t" data-key="total_invest">Total investering:</strong>
+                        <p id="reviewTotal">1500 kr × 1 restaurang = 1500 kr</p>
+                    </div>
+                </div>
+                
+                <div class="review-section">
+                    <h3 class="t" data-key="tracking">📊 Vi spårar dessa metrics</h3>
+                    <div style="background:var(--bg); border-radius:10px; padding:14px; margin-bottom:10px">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <span style="font-size:24px">👁️</span>
+                            <div>
+                                <strong class="t" data-key="impressions">Visningar</strong>
+                                <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="impressions_desc">Hur många som ser din annons</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg); border-radius:10px; padding:14px; margin-bottom:10px">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <span style="font-size:24px">👆</span>
+                            <div>
+                                <strong class="t" data-key="clicks">Klick</strong>
+                                <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="clicks_desc">Hur många som klickar på din meny</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg); border-radius:10px; padding:14px; margin-bottom:10px">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <span style="font-size:24px">🛒</span>
+                            <div>
+                                <strong class="t" data-key="conversions">Konverteringar</strong>
+                                <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="conversions_desc">Faktiska beställningar från annonser</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg); border-radius:10px; padding:14px">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <span style="font-size:24px">💰</span>
+                            <div>
+                                <strong>ROAS</strong>
+                                <p style="font-size:12px; color:var(--text-med); margin:4px 0 0" class="t" data-key="roas_desc_track">Avkastning på din investering</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background:#D1FAE5; border: 2px solid var(--success); border-radius:12px; padding:16px; margin:20px 0; text-align:center">
+                    <div style="font-size:32px; margin-bottom:8px">✅</div>
+                    <strong style="font-size:16px; color:#065F46" class="t" data-key="ready">Allt klart för lansering!</strong>
+                    <p style="font-size:13px; color:#065F46; margin-top:6px" class="t" data-key="ready_desc">Din kampanj startar inom 30 minuter</p>
+                </div>
+                
+                <button class="btn btn-primary" style="background:var(--success); font-size:17px" onclick="launchCampaign()">
+                    🚀 <span class="t" data-key="launch_now">Lansera kampanj nu</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="success" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+            </div>
+            <div class="card">
+                <div class="success-animation">
+                    <div class="success-icon">🎉</div>
+                    <h1 class="t" data-key="success_title">Kampanj lanserad!</h1>
+                    <p style="margin:16px 0 24px" class="t" data-key="success_desc">Din kampanj är nu live och når kunder i ditt område.</p>
+                </div>
+                
+                <div style="background:var(--bg); border-radius:12px; padding:18px; margin-bottom:20px">
+                    <h3 style="font-size:16px; margin-bottom:12px" class="t" data-key="next_steps">📋 Nästa steg</h3>
+                    <div style="display:flex; gap:10px; margin-bottom:10px">
+                        <span>1️⃣</span>
+                        <p style="font-size:14px; margin:0" class="t" data-key="step1">Vi startar din kampanj inom 30 minuter</p>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:10px">
+                        <span>2️⃣</span>
+                        <p style="font-size:14px; margin:0" class="t" data-key="step2">Du får ett email när första beställningen kommer in</p>
+                    </div>
+                    <div style="display:flex; gap:10px">
+                        <span>3️⃣</span>
+                        <p style="font-size:14px; margin:0" class="t" data-key="step3">Se realtidsstatistik på din instrumentpanel</p>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="showScreen('dashboard')"><span class="t" data-key="view_dash">Se instrumentpanel →</span></button>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard" class="screen">
+            <div class="header">
+                <div class="logo"><div class="logo-icon">🍔</div>Foodora Ads</div>
+            </div>
+            <div class="card">
+                <h2 class="t" data-key="dash_title">Prestandaöversikt</h2>
+                <p style="margin-bottom:20px" class="t" data-key="dash_sub">Realtidsdata för dina kampanjer</p>
+                
+                <div class="metric">
+                    <div class="metric-icon pink">💰</div>
+                    <div class="metric-label t" data-key="revenue">TOTAL INTÄKT</div>
+                    <div class="metric-value">45,890 kr</div>
+                    <div class="metric-change">↑ 24.5%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-icon green">📈</div>
+                    <div class="metric-label t" data-key="orders">ANNONSBESTÄLLNINGAR</div>
+                    <div class="metric-value">328</div>
+                    <div class="metric-change">↑ 18.3%</div>
+                </div>
+
+                <div class="uplift-card">
+                    <div class="uplift-title t" data-key="uplift_title">💎 Intäktsökning från annonsering</div>
+                    <div class="uplift-grid">
+                        <div class="uplift-col">
+                            <div class="uplift-label t" data-key="without_ads">Utan annonser</div>
+                            <div class="uplift-value">82,500 kr</div>
+                        </div>
+                        <div class="uplift-col">
+                            <div class="uplift-label t" data-key="with_ads">Med Foodora Ads</div>
+                            <div class="uplift-value">127,840 kr</div>
+                        </div>
+                    </div>
+                    <div class="uplift-big">+55%</div>
+                    <div style="font-size:13px; opacity:0.9"><strong>+45,340 kr</strong> <span class="t" data-key="extra">extra intäkt</span></div>
+                </div>
+
+                <div class="roas-card">
+                    <div style="font-size:18px; font-weight:700; margin-bottom:12px" class="t" data-key="roas_title">🎯 Avkastning (ROAS)</div>
+                    <div class="roas-value">5.4x</div>
+                    <div class="roas-desc t" data-key="roas_desc">För varje krona du spenderar får du tillbaka 5.40 kr</div>
+                </div>
+
+                <div style="background:linear-gradient(135deg, #3B82F6, #2563EB); border-radius:12px; padding:20px; color:white">
+                    <div style="font-size:24px; margin-bottom:10px">💡</div>
+                    <div style="font-size:16px; font-weight:700; margin-bottom:8px" class="t" data-key="insight">Prestandainsikt</div>
+                    <p style="font-size:14px; opacity:0.95; margin-bottom:12px" class="t" data-key="insight_text">Dina helgkampanjer överträffar vardag med 45%. Överväg att öka budgeten.</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="showScreen('welcome')"><span class="t" data-key="new_camp">Skapa ny kampanj</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const t={sv:{welcome_title:'Välkommen till Foodora Ads!',welcome_sub:'Skapa din första kampanj på under 5 minuter.',q_goal:'Vad är ditt mål?',goal_orders:'📈 Få fler beställningar',goal_cust:'👥 Attrahera nya kunder',goal_dish:'🍕 Marknadsför en rätt',q_exp:'Din erfarenhet?',exp_never:'🌱 Aldrig gjort förut',exp_some:'📚 Viss erfarenhet',exp_fam:'🎓 Mycket bekant',continue:'Fortsätt →',outlet_title:'Välj dina restauranger',outlet_sub:'Välj en eller flera restauranger.',camp_title:'Välj kampanjtyp',camp_sub:'Välj den typ som matchar ditt mål.',camp_weekend:'🎉 Helgrush',popular:'POPULÄR',camp_weekend_desc:'Öka synlighet under helgerna.',camp_new:'👥 Nya kunder',recommended:'REKOMMENDERAD',camp_new_desc:'Rikta in på förstagångsbeställare.',camp_always:'📍 Alltid på',camp_always_desc:'Stadig synlighet varje dag.',next_budget:'Nästa: Budget →',budget_title:'Hur mycket vill du spendera?',budget_sub:'Flytta reglaget för att ställa in din budget.',expected:'📈 FÖRVÄNTADE RESULTAT',never_exceed:'Vi överskrider aldrig din budget',pause:'Pausa när som helst, inga påföljder',guarantee:'7-dagars pengarna-tillbaka-garanti',next_creative:'Nästa: Skapa annons →',creative_title:'Skapa din annons',creative_sub:'Vi har automatiskt skapat en annons baserat på din meny.',auto_gen:'Automatiskt genererad!',auto_gen_desc:'Vi valde din mest populära rätt och bästa foto',add_badge:'Lägg till märke (valfritt)',badge_new:'Nyhet!',badge_discount:'15% rabatt',badge_chef:'Kockens val',badge_hot:'Populär',choose_dish:'Välj rätt att marknadsföra',most_ordered:'Din mest beställda',high_margin:'Hög marginal',offer_title:'Skapa erbjudande (valfritt)',discount:'rabatt',offer_calc:'💡 Ett 15% erbjudande kostar dig ~60 kr men ökar typiskt ordervärdet med 180 kr',next_target:'Nästa: Målgrupp →',target_title:'Välj din målgrupp',target_sub:'Hur vill du nå dina kunder?',auto_target:'Automatisk (Rekommenderad)',auto_target_desc:'Låt oss hitta dina kunder - AI optimerar baserat på liknande restauranger',coverage:'Täckning: 2.5 km radie • ~45,000 potentiella kunder',smart_tip:'Smart målinriktning aktiverad',smart_desc:'Vi visar dina annonser för kunder som tidigare beställt italiensk mat',manual_target:'Manuell',manual_target_desc:'Anpassa exakt när och vem du vill nå',time_slots:'Välj tidsperioder',lunch:'Lunch',afternoon:'Eftermiddag',dinner:'Middag',evening:'Kväll',night:'Natt',late_night:'Sen natt',segments:'Kundsegment',seg_new:'Nya kunder',seg_new_desc:'Personer som aldrig beställt från dig',seg_lapsed:'Vilande kunder',seg_lapsed_desc:'Inte beställt på 30+ dagar',seg_regulars:'Stamkunder',seg_regulars_desc:'Beställer regelbundet från dig',seg_cuisine:'Kök-utforskare',seg_cuisine_desc:'Personer som beställer italiensk mat',review_launch:'Granska & Lansera →',review_title:'Granska din kampanj',review_sub:'Allt ser bra ut? Lansera din kampanj!',preview:'📱 Förhandsvisning',budget_break:'💰 Budgetuppdelning',daily_budget:'Daglig budget:',campaign_duration:'Kampanjlängd:',total_invest:'Total investering:',tracking:'📊 Vi spårar dessa metrics',impressions:'Visningar',impressions_desc:'Hur många som ser din annons',clicks:'Klick',clicks_desc:'Hur många som klickar på din meny',conversions:'Konverteringar',conversions_desc:'Faktiska beställningar från annonser',roas_desc_track:'Avkastning på din investering',ready:'Allt klart för lansering!',ready_desc:'Din kampanj startar inom 30 minuter',launch_now:'Lansera kampanj nu',success_title:'Kampanj lanserad!',success_desc:'Din kampanj är nu live och når kunder i ditt område.',next_steps:'📋 Nästa steg',step1:'Vi startar din kampanj inom 30 minuter',step2:'Du får ett email när första beställningen kommer in',step3:'Se realtidsstatistik på din instrumentpanel',view_dash:'Se instrumentpanel →',dash_title:'Prestandaöversikt',dash_sub:'Realtidsdata för dina kampanjer',revenue:'TOTAL INTÄKT',orders:'ANNONSBESTÄLLNINGAR',uplift_title:'💎 Intäktsökning från annonsering',without_ads:'Utan annonser',with_ads:'Med Foodora Ads',extra:'extra intäkt',roas_title:'🎯 Avkastning (ROAS)',roas_desc:'För varje krona du spenderar får du tillbaka 5.40 kr',insight:'Prestandainsikt',insight_text:'Dina helgkampanjer överträffar vardag med 45%. Överväg att öka budgeten.',new_camp:'Skapa ny kampanj'},en:{welcome_title:'Welcome to Foodora Ads!',welcome_sub:'Create your first campaign in under 5 minutes.',q_goal:'What is your goal?',goal_orders:'📈 Get more orders',goal_cust:'👥 Attract new customers',goal_dish:'🍕 Promote a dish',q_exp:'Your experience?',exp_never:'🌱 Never done before',exp_some:'📚 Some experience',exp_fam:'🎓 Very familiar',continue:'Continue →',outlet_title:'Select Your Restaurants',outlet_sub:'Choose one or more restaurants.',camp_title:'Choose Campaign Type',camp_sub:'Pick the type that matches your goal.',camp_weekend:'🎉 Weekend Rush',popular:'POPULAR',camp_weekend_desc:'Boost visibility during weekends.',camp_new:'👥 New Customers',recommended:'RECOMMENDED',camp_new_desc:'Target first-time orderers.',camp_always:'📍 Always On',camp_always_desc:'Steady visibility every day.',next_budget:'Next: Budget →',budget_title:'How much do you want to spend?',budget_sub:'Move the slider to set your budget.',expected:'📈 EXPECTED RESULTS',never_exceed:'We\'ll never exceed your budget',pause:'Pause anytime, no penalties',guarantee:'7-day money-back guarantee',next_creative:'Next: Create Ad →',creative_title:'Create Your Ad',creative_sub:'We automatically created an ad based on your menu.',auto_gen:'Auto-Generated!',auto_gen_desc:'We picked your most popular dish and best photo',add_badge:'Add badge (optional)',badge_new:'New!',badge_discount:'15% off',badge_chef:'Chef\'s Choice',badge_hot:'Popular',choose_dish:'Choose dish to promote',most_ordered:'Your most ordered',high_margin:'High margin',offer_title:'Create offer (optional)',discount:'discount',offer_calc:'💡 A 15% offer costs you ~60 kr but typically increases order value by 180 kr',next_target:'Next: Targeting →',target_title:'Choose Your Audience',target_sub:'How do you want to reach customers?',auto_target:'Automatic (Recommended)',auto_target_desc:'Let us find your customers - AI optimizes based on similar restaurants',coverage:'Coverage: 2.5 km radius • ~45,000 potential customers',smart_tip:'Smart targeting enabled',smart_desc:'We show your ads to customers who previously ordered Italian food',manual_target:'Manual',manual_target_desc:'Customize exactly when and who you reach',time_slots:'Choose time slots',lunch:'Lunch',afternoon:'Afternoon',dinner:'Dinner',evening:'Evening',night:'Night',late_night:'Late Night',segments:'Customer Segments',seg_new:'New customers',seg_new_desc:'People who never ordered from you',seg_lapsed:'Lapsed customers',seg_lapsed_desc:'Haven\'t ordered in 30+ days',seg_regulars:'Regular customers',seg_regulars_desc:'Order regularly from you',seg_cuisine:'Cuisine explorers',seg_cuisine_desc:'People who order Italian food',review_launch:'Review & Launch →',review_title:'Review Your Campaign',review_sub:'Everything looks good? Launch your campaign!',preview:'📱 Preview',budget_break:'💰 Budget Breakdown',daily_budget:'Daily budget:',campaign_duration:'Campaign duration:',total_invest:'Total investment:',tracking:'📊 We track these metrics',impressions:'Impressions',impressions_desc:'How many see your ad',clicks:'Clicks',clicks_desc:'How many click on your menu',conversions:'Conversions',conversions_desc:'Actual orders from ads',roas_desc_track:'Return on your investment',ready:'All set for launch!',ready_desc:'Your campaign starts within 30 minutes',launch_now:'Launch Campaign Now',success_title:'Campaign Launched!',success_desc:'Your campaign is now live and reaching customers in your area.',next_steps:'📋 Next Steps',step1:'We\'ll start your campaign within 30 minutes',step2:'You\'ll get an email when the first order comes in',step3:'See real-time statistics on your dashboard',view_dash:'View Dashboard →',dash_title:'Performance Overview',dash_sub:'Real-time data for your campaigns',revenue:'TOTAL REVENUE',orders:'AD ORDERS',uplift_title:'💎 Revenue Uplift from Advertising',without_ads:'Without ads',with_ads:'With Foodora Ads',extra:'extra revenue',roas_title:'🎯 Return on Ad Spend (ROAS)',roas_desc:'For every krona you spend, you get back 5.40 kr',insight:'Performance Insight',insight_text:'Your weekend campaigns outperform weekdays by 45%. Consider increasing budget.',new_camp:'Create New Campaign'}};
+        
+        let state={lang:'sv',goal:null,exp:null,outlets:[],campaign:null,budget:1500,badge:'💰 15% rabatt',dish:'Margherita Pizza',targeting:'auto'};
+        
+        function setLang(l){state.lang=l;document.querySelectorAll('.t').forEach(e=>{const k=e.dataset.key;if(t[l][k])e.textContent=t[l][k];});document.getElementById('flag').textContent=l==='sv'?'🇸🇪':'EN';document.getElementById('lang').textContent=l==='sv'?'Svenska':'English';document.querySelectorAll('.lang-opt').forEach(o=>o.classList.toggle('active',o.textContent.includes(l==='sv'?'Svenska':'English')));document.getElementById('langDrop').classList.remove('show');}
+        
+        function toggleLang(e){e.stopPropagation();document.getElementById('langDrop').classList.toggle('show');}
+        document.addEventListener('click',()=>document.getElementById('langDrop').classList.remove('show'));
+        
+        function selectOpt(group,val){event.target.closest('.q-card').querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));event.target.closest('.opt-btn').classList.add('selected');state[group]=val;document.getElementById('welcomeBtn').disabled=!(state.goal&&state.exp);}
+        
+        function toggleOutlet(el,id){el.classList.toggle('selected');el.querySelector('.checkbox').textContent=el.classList.contains('selected')?'✓':'';if(el.classList.contains('selected'))state.outlets.push(id);else state.outlets=state.outlets.filter(o=>o!==id);document.getElementById('outletBtn').disabled=state.outlets.length===0;updateBudget(state.budget);}
+        
+        function selectCampaign(el,type){document.querySelectorAll('.camp-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');state.campaign=type;document.getElementById('campBtn').disabled=false;}
+        
+        function updateBudget(val){state.budget=parseInt(val);document.getElementById('budgetDisp').textContent=val+' kr';const orders=Math.round(val*0.025);document.getElementById('estOrders').textContent=(orders-5)+'-'+(orders+10)+' '+(state.lang==='sv'?'ytterligare beställningar':'additional orders');document.getElementById('estRev').textContent='ROI: '+(Math.round(val*0.88)-150)+'-'+(Math.round(val*0.88)+450)+' kr '+(state.lang==='sv'?'extra intäkter':'extra revenue');const total=val*state.outlets.length;document.getElementById('totalBudget').textContent=total.toLocaleString()+' kr';document.getElementById('outletCount').textContent=state.outlets.length;document.getElementById('reviewDailyBudget').textContent=Math.round(val/30)+' kr/dag per restaurang';document.getElementById('reviewTotal').textContent=val+' kr × '+state.outlets.length+' restaurang'+(state.outlets.length>1?'er':'')+' = '+total.toLocaleString()+' kr';}
+        
+        function selectBadge(el,text){document.querySelectorAll('.badge-option').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');state.badge=text;document.getElementById('badgePreview').textContent=text;document.getElementById('finalBadge').textContent=text;}
+        
+        function selectDish(el,name){document.querySelectorAll('.dish-card').forEach(d=>{d.classList.remove('selected');d.querySelector('span:last-child').textContent='';});el.classList.add('selected');el.querySelector('span:last-child').textContent='✓';state.dish=name;}
+        
+        function calcOffer(val){const cost=Math.round(val*4);const increase=Math.round(val*12);const lang=state.lang;document.querySelector('.offer-calc').innerHTML=(lang==='sv'?'💡 Ett ':'💡 A ')+val+'% '+(lang==='sv'?'erbjudande kostar dig ~':'offer costs you ~')+cost+' kr '+(lang==='sv'?'men ökar typiskt ordervärdet med ':'but typically increases order value by ')+increase+' kr';}
+        
+        function selectTargeting(el,type){document.querySelectorAll('.targeting-mode').forEach(m=>m.classList.remove('selected'));el.classList.add('selected');state.targeting=type;document.getElementById('autoPreview').style.display=type==='auto'?'block':'none';document.getElementById('manualSettings').style.display=type==='manual'?'block':'none';}
+        
+        function toggleTime(el){el.classList.toggle('selected');}
+        function toggleSegment(el){el.classList.toggle('selected');const check=el.querySelector('.checkbox');check.textContent=el.classList.contains('selected')?'✓':'';}
+        
+        function launchCampaign(){showScreen('success');setTimeout(()=>{showScreen('dashboard');},3000);}
+        
+        function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+        
+        setLang('sv');updateBudget(1500);
+    </script>
+</body>
+</html>
